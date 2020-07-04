@@ -1,0 +1,224 @@
+<html>
+<body>
+<input type="text" id="count" value="">
+<button onclick="doDraw()">Draw</button>
+<button onclick="doClear()">Clear</button>
+<br>
+<canvas id="canvas" width="1000" height="720"></canvas>
+
+<script type="text/javascript">
+
+
+var elem = document.getElementById('canvas');
+var context = elem.getContext('2d');
+var start ; // 시작 x,y좌표
+var area ; //네모 하나의 넓이
+
+context.fillStyle = '#000';
+context.lineWidth = 1;
+
+function doDraw(){
+  start = 100;
+  area = 50;
+
+  var count = parseInt(document.getElementById("count").value) ;
+
+  //네모 전체크기가 캔버스 크기를 넘을 경우
+  var recNum = Math.pow(2,count);
+  while(findCoord(recNum) > 740) {
+    area = area-10;
+    start = 10;
+  }
+
+  var start_x = start;//start x point
+  var start_y = start;//start y point
+
+//네모 그리기
+  context.fillStyle = '#149FEC';
+  for(var i=0; i < recNum; i++){
+	   for(var j=0; j < recNum; j++){
+		     context.fillRect(start_x, start_y, area, area);
+		     start_x = start_x + area+1;
+	   }
+     start_x = start;
+     start_y = start_y + area+1;
+  }
+
+//reset start point
+  start_x = start;
+  start_y = start;
+
+var flag = false ;
+
+//find mouse point
+  elem.addEventListener('click', function(event) {
+    if ( event.x > start+9 &&          //클릭이 네모를 벗어나지 않는 경우만 실행
+         event.y > start+32 &&
+         event.x < recNum * area + recNum + start+ 9 &&
+         event.y < recNum * area + recNum + start+ 32 &&
+         !flag) {
+           
+      findClickBlock(event.x - 9,event.y - 32,recNum); 
+      flag = true ;
+    }
+  });
+
+
+};
+
+//클릭한 네모의 index를 찾음
+function findClickBlock(x,y,recNum){
+
+	var zero_x = 0;//zero_x = 클릭한 블럭의 x index
+  var zero_y = 0;//zero_y = 클릭한 블럭의 y index
+
+  var or_x = x - start;
+  var or_y = y - start;
+
+	x = x - start;
+	y = y - start;
+
+//인덱스 찾기
+	while(x > area-1){
+	 zero_x++;
+	 x = x - area;
+	}
+
+	while(y > area-1){
+	 zero_y++;
+	 y = y - area;
+	}
+
+  var white_x = zero_x * area + zero_x;
+  var white_y = zero_y * area + zero_y;
+
+  while(white_x > or_x) {
+    zero_x--;
+    white_x = zero_x * area + zero_x;
+  }
+
+  while(white_y > or_y) {
+    zero_y--;
+    white_y = zero_y * area + zero_y;
+  }
+
+//선택한 네모를 흰색으로
+  context.fillStyle = 'white';
+  context.fillRect(white_x+start, white_y+start, area, area);
+
+  //zero_x = 클릭한 블럭의 x index, zero_y = 클릭한 블럭의 y index
+  findBlock(0, 0, zero_x, zero_y, recNum);
+
+
+};
+
+
+function findBlock(start_x, start_y, zero_x, zero_y, num) {
+
+  context.fillStyle = '#149FEC';
+
+  if (num == 2) {   // base case
+      if(start_x == zero_x) {
+          if(start_y == zero_y) {             // base case 1
+                // TO - DO -> draw block on
+                // start_x+1, start_y, start_x, start_y+1, start_x+1, start_y+1
+  				 	 context.fillRect(findCoord(start_x+1), findCoord(start_y), area, area+10);
+             context.fillRect(findCoord(start_x), findCoord(start_y+1), area+10, area);
+
+          } else {                            // base case 2
+                // TO - DO -> draw block on
+                // start_x, start_y, start_x+1, start_y, start_x+1, start_y+1
+             context.fillRect(findCoord(start_x), findCoord(start_y), area+10, area);
+             context.fillRect(findCoord(start_x+1), findCoord(start_y), area, area+10);
+
+            }
+        } else if(start_x + 1 == zero_x){
+            if(start_y == zero_y) {             // base case 3
+                // TO - DO -> draw block on
+                // start_x, start_y, start_x, start_y+1, start_x+1, start_y+1
+             context.fillRect(findCoord(start_x), findCoord(start_y), area, area+10);
+             context.fillRect(findCoord(start_x), findCoord(start_y+1), area+10, area);
+
+            } else {    // base case 4
+                // TO - DO -> draw block on
+                // start_x, start_y, start_x+1, start_y, start_x, start_y+1
+						 context.fillRect(findCoord(start_x), findCoord(start_y), area+10, area);
+             context.fillRect(findCoord(start_x), findCoord(start_y), area, area+10);
+
+            }
+          }
+
+    } else {            // general case
+        var middle_x = start_x + num/2;
+        var middle_y = start_y + num/2;
+
+        if (zero_x < middle_x) {
+            if (zero_y < start_y + num/2) {     // case 1
+                findBlock(start_x, start_y, zero_x, zero_y, num/2) ;
+
+                // TO - DO -> draw block on
+                // middle_x - 1, middle_y, middle_x, middle_y - 1, middle_x, middle_y
+
+                context.fillRect(findCoord(middle_x), findCoord(middle_y-1), area, area+10);
+            	  context.fillRect(findCoord(middle_x-1), findCoord(middle_y), area+10, area);
+
+                findBlock(start_x,  middle_y, middle_x-1, middle_y,   num/2) ; // 하나 제거한 case 2 호출
+                findBlock(middle_x, start_y,  middle_x,   middle_y-1, num/2) ; // 하나 제거한 case 3 호출
+                findBlock(middle_x, middle_y, middle_x,   middle_y,   num/2) ; // 하나 제거한 case 4 호출
+            } else {                            // case 2
+                findBlock(start_x, middle_y, zero_x, zero_y, num/2) ;
+
+                // TO - DO -> draw block on
+                // middle_x-1, middle_y-1, middle_x, middle_y-1, middle_x, middle_y,
+
+                context.fillRect(findCoord(middle_x-1), findCoord(middle_y-1), area+10, area);
+            	  context.fillRect(findCoord(middle_x), findCoord(middle_y-1), area, area+10);
+
+                findBlock(start_x,  start_y,  middle_x-1, middle_y-1, num/2) ; // 하나 제거한 case 1 호출
+                findBlock(middle_x, start_y,  middle_x,   middle_y-1, num/2) ; // 하나 제거한 case 3 호출
+                findBlock(middle_x, middle_y, middle_x,   middle_y,   num/2) ; // 하나 제거한 case 4 호출
+            }
+        } if(zero_x >= middle_x) {
+            if (zero_y < middle_y) {     // case 3
+
+                findBlock(middle_x, start_y, zero_x, zero_y, num/2) ;
+
+                // TO - DO -> draw block on
+                // middle_x-1, middle_y-1, middle_x-1, middle_y, middle_x, middle_y,
+
+                context.fillRect(findCoord(middle_x-1), findCoord(middle_y-1), area, area+10);
+            	  context.fillRect(findCoord(middle_x-1), findCoord(middle_y), area+10, area);
+
+                findBlock(start_x,  start_y,  middle_x-1, middle_y-1, num/2) ; // 하나 제거한 case 1 호출
+                findBlock(start_x,  middle_y, middle_x-1, middle_y,   num/2) ; // 하나 제거한 case 2 호출
+                findBlock(middle_x, middle_y, middle_x,   middle_y,   num/2) ; // 하나 제거한 case 4 호출
+            } else {                            // case 4
+                findBlock(middle_x, middle_y, zero_x, zero_y, num/2) ;
+
+                // TO - DO -> draw block on
+                // middle_x-1, middle_y-1, middle_x-1, middle_y, middle_x, middle_y-1
+
+                context.fillRect(findCoord(middle_x-1), findCoord(middle_y-1), area, area+10);
+            	  context.fillRect(findCoord(middle_x-1), findCoord(middle_y-1), area+10, area);
+
+                findBlock(start_x,  start_y,  middle_x-1, middle_y-1, num/2) ; // 하나 제거한 case 1 호출
+                findBlock(start_x,  middle_y, middle_x-1, middle_y,   num/2) ; // 하나 제거한 case 2 호출
+                findBlock(middle_x, start_y,  middle_x,   middle_y-1, num/2) ; // 하나 제거한 case 3 호출
+            }
+        }
+      }
+
+};
+
+//실제 좌표 계산
+function findCoord(coordi){
+ return coordi = coordi * area + coordi + start;
+};
+
+function doClear() {
+  context.clearRect(0, 0, canvas.width, canvas.height);
+};
+
+</script>
+</body>
+</html>

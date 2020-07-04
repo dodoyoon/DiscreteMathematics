@@ -1,0 +1,91 @@
+<html>
+<body>
+
+<input type="text" id="count" value="">
+<button onclick="doDraw()">Draw</button>
+<br>
+<canvas id="canvas" width="1000" height="900"></canvas>
+
+<script type="text/javascript">
+var elem = document.getElementById('canvas');
+var context = elem.getContext('2d');
+
+context.fillStyle = '#000';
+context.lineWidth = 1;
+
+var deg_to_rad = Math.PI / 180.0;
+
+function doDraw(){
+
+  var count = parseInt(document.getElementById("count").value) ;
+  
+  doClear() ;
+  fractal([50,150], [500,150], 0, count);
+  fractal([275, 150 + Math.sqrt(3) * 450 / 2], [50,150], 240, count);
+  fractal([500,150],[275, 150 + Math.sqrt(3) * 450 / 2], 120, count);
+
+};
+
+function fractal(initial_point1, initial_point2, angle, depth){
+
+    if (depth < 0) {
+        return null ;
+    }
+
+    if (depth == 0){
+        DrawLine(initial_point1, initial_point2);
+        return ; 
+    }
+    
+    var point1       = divide_by(add(multiply_by(initial_point1, 2), initial_point2), 3); // 내분점 1
+    var point2       = divide_by(add(multiply_by(initial_point2, 2), initial_point1), 3); // 내분점 2
+
+    var star_middle_x = point1[0] + Math.cos((angle-60) * deg_to_rad) * length(initial_point1, initial_point2) / 3 ;
+    var star_middle_y = point1[1] + Math.sin((angle-60) * deg_to_rad) * length(initial_point1, initial_point2) / 3 ;
+    var star_middle = [star_middle_x, star_middle_y] ;
+
+    // A  B    D   E
+    //  ---     ---
+    //     \   /
+    //      \ /
+    //       C
+
+    fractal(initial_point1, point1, angle, depth-1);  // A -> B
+    fractal(point1, star_middle, angle-60, depth-1);  // B -> C
+    fractal(star_middle, point2, angle+60, depth-1); // C -> D
+    fractal(point2, initial_point2, angle, depth-1); // D -> E
+};
+
+function multiply_by(a, num){
+    return [a[0]*num, a[1]*num];
+};
+
+function divide_by(a, num){
+    return [a[0]/num, a[1]/num];
+};
+ 
+function add(a, b){
+    return [a[0]+b[0], a[1]+b[1]];
+};
+
+function length(a, b){
+    return Math.sqrt(Math.pow(a[0] - b[0],2) + 
+                     Math.pow(a[1] - b[1],2));
+};
+
+function DrawLine(a, b){
+    context.beginPath();
+    context.strokeStyle = "black";
+    context.moveTo(a[0], a[1]);
+    context.lineTo(b[0], b[1]);
+    context.stroke();
+    context.closePath();
+};
+function doClear() {
+  context.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+</script>
+
+</body>
+</html>
